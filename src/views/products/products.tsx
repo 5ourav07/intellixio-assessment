@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
-import { Product } from "@/types";
-import { ProductModal } from "@/views/products/productModal/productModal";
 import { BackToHome } from "@/components/backToHome/backToHome";
-import { ProductList } from "@/views/products/productList/productList";
-import { PaginationControls } from "@/views/products/paginationControls/paginationControls";
-import { usePagination } from "@/hooks/usePagination";
 import { PRODUCTS_DATA } from "@/data/productsData";
+import { usePagination } from "@/hooks/usePagination";
+import { Product } from "@/types";
+import { PaginationControls } from "@/views/products/paginationControls/paginationControls";
+import { ProductList } from "@/views/products/productList/productList";
+import { ProductModal } from "@/views/products/productModal/productModal";
+import { useModalStore } from "@/zStore/modalStore";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect } from "react";
 
-export const Products: React.FC = () => {
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+const ProductsContent: React.FC = () => {
+  const { selectedProduct, setSelectedProduct } = useModalStore();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const {
     currentPage,
     totalPages,
@@ -18,13 +23,27 @@ export const Products: React.FC = () => {
     handlePageChange,
   } = usePagination({ items: PRODUCTS_DATA, itemsPerPage: 5 });
 
-  const handleOpenModal = useCallback((product: Product) => {
-    setSelectedProduct(product);
-  }, []);
+  useEffect(() => {
+    const productId = searchParams.get("product-id");
+    if (productId) {
+      const product = PRODUCTS_DATA.find((p) => p.id.toString() === productId);
+      if (product) {
+        setSelectedProduct(product);
+      }
+    } else {
+      setSelectedProduct(null); // Close modal if no query parameter
+    }
+  }, [searchParams, setSelectedProduct]);
 
-  const handleCloseModal = useCallback(() => {
+  const handleOpenModal = (product: Product) => {
+    setSelectedProduct(product);
+    router.push(`?product-id=${product.id}`);
+  };
+
+  const handleCloseModal = () => {
     setSelectedProduct(null);
-  }, []);
+    router.push("/products");
+  };
 
   return (
     <div>
@@ -40,5 +59,13 @@ export const Products: React.FC = () => {
         <ProductModal product={selectedProduct} onClose={handleCloseModal} />
       )}
     </div>
+  );
+};
+
+export const Products: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProductsContent />
+    </Suspense>
   );
 };

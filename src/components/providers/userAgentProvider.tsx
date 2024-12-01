@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import React, {
   createContext,
   useContext,
   useMemo,
@@ -16,12 +16,11 @@ type UserAgent = string;
 
 type UserAgentContextType = {
   userAgent: UserAgent | undefined;
-  setUserAgent: (userAgent: UserAgent | undefined) => void;
 };
 
 type UserAgentProviderProps = {
   children: ReactNode;
-  userAgent?: UserAgent;
+  initialUserAgent?: UserAgent; // Define the prop
 };
 
 const UserAgentContext = createContext<UserAgentContextType | undefined>(
@@ -38,21 +37,21 @@ export const useUserAgentContext = (): UserAgentContextType => {
 
 export const UserAgentProvider: React.FC<UserAgentProviderProps> = ({
   children,
-  userAgent: userAgentProp,
+  initialUserAgent,
 }) => {
   const [userAgent, setUserAgent] = useState<UserAgent | undefined>(
-    userAgentProp
+    initialUserAgent
   );
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    setUserAgent(window.navigator.userAgent);
+    if (typeof window !== "undefined") {
+      setUserAgent(window.navigator.userAgent);
+    }
   }, []);
 
   const value = useMemo<UserAgentContextType>(
     () => ({
       userAgent,
-      setUserAgent,
     }),
     [userAgent]
   );
