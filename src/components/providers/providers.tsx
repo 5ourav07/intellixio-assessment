@@ -6,6 +6,8 @@ export const Providers: React.FC<{
   userAgent?: string;
 }> = ({ children, userAgent }) => {
   return (
-    <UserAgentProvider userAgent={userAgent}>{children}</UserAgentProvider>
+    <UserAgentProvider initialUserAgent={userAgent}>
+      {children}
+    </UserAgentProvider>
   );
 };
